@@ -17,7 +17,7 @@ to run.
 Reproduction
 ---------------
 
-After package installation, you can simply run the code in '''python'''.
+After package installation, you can simply run the code in ```python```.
 
 References
 ----------
