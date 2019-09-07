@@ -1,31 +1,44 @@
 import os
+import cv2
 import argparse
 import numpy as np
 import scipy as sc
 from os import listdir
-from scipy import misc
 from skimage import io
 import filterfunctions as FF
+from skimage import img_as_uint
 from os.path import isfile, join
 from matplotlib import pyplot as plt
 
 octParams = dict()
+rpe_scan_list  = list()
+nrpe_scan_list = list()
 
-octParams['sizeInZ']=6.529-2.176  # Size in mm
-octParams['sizeInX']=512*0.011335 # Size in mm
-octParams['sizeInY']=496*0.003872 # Size in mm
-
-# Defaults w.r.t. Chen et al. paper
-octParams['defaultSizeInZ']=6 # Size in mm
-octParams['defaultSizeInX']=6 # Size in mm
-octParams['defaultSizeInY']=2 # Size in mm
-
-octParams['widthOverHeight']=6*((octParams['defaultSizeInZ']/128.)/(octParams['defaultSizeInX']/512.))
-octParams['intensity']=4
-octParams['smoothingSigma']=0.1
-
-rpe_scan_list  = []
-nrpe_scan_list = []
+def init_meta_info():
+    useChenDefault = False
+    metaFile = open('OCT_info.txt','r')
+    lines=metaFile.readlines()
+    for l in lines:
+        l = l.rstrip()
+        l = l.strip()
+        params=l.split('=')
+        if(len(params)==2):
+            paramName = params[0].strip()
+            val = params[1].strip()
+            if(paramName=='useDefaultFromChen'):
+                useChenDefault = True if val.lower()=='yes' else False
+            else:
+                octParams[paramName] = float(val)
+                
+    if(useChenDefault):
+        # Defaults w.r.t. Chen et al. paper
+        octParams['sizeInZ']=6  # Size in mm
+        octParams['sizeInX']=6 # Size in mm
+        octParams['sizeInY']=2 # Size in mm
+        
+        octParams['widthOverHeightCoeff']=6
+        octParams['intensity']=4
+        octParams['smoothingSigma']=0.1
 
 def show_image( image, block = True ):
     plt.imshow( image, cmap = plt.get_cmap('gray'))
@@ -163,7 +176,8 @@ def read_b_scans( path , img_type = "None",toID=False,returnIds=False):
     rawstack=np.empty((rawSize[0],rawSize[1],len(ind)))
    
     keys=rawStackDict.keys()
-    keys.sort()
+    keys = sorted(keys)
+
     i=0
     for k in keys:
         rawstack[:,:,i]=rawStackDict[k]
@@ -237,6 +251,7 @@ def produce_drusen_projection_image_chen( b_scans ):
         n_bscan  = np.copy(b_scan)
         rpe = rpe_scan_list[i]
         nrpe = nrpe_scan_list[i]
+
         rpe = fill_inner_gaps(rpe)
         rpe = rpe.astype('int')
         nrpe = nrpe.astype('int')
@@ -320,24 +335,30 @@ def save_masks(masks,refPath,savePath,img_type="None"):
         for i in range(masks.shape[2]):
             fname=str(sin[i])+'-binmask.png'
 #            print "Saving......",i
-            misc.imsave(savePath+os.sep+fname,masks[:,:,i])
+            lsav=masks[:,:,i]/float(np.max(masks[:,:,i])) if np.max(masks[:,:,i])!=0 else masks[:,:,i]
+            lsav=(lsav*255).astype("uint8")
+            cv2.imwrite(savePath+os.sep+fname,lsav)
     else:
         for i in range(masks.shape[3]):
             fname=str(sin[i])+'-binmask.png'
-            misc.imsave(savePath+os.sep+fname,masks[:,:,:,i])
+            lsav=masks[:,:,:,i]/float(np.max(masks[:,:,:,i])) if np.max(masks[:,:,:,i])!=0 else masks[:,:,:,i]
+            lsav=(lsav*255).astype("uint8")
+            cv2.imwrite(savePath+os.sep+fname,lsav)
         
 
 def get_label_from_projection_image_chen(projected_labels, labels):
     lbls = np.copy(labels)
+    
     for i in range( labels.shape[2] ):
         valid_drusens = np.tile(projected_labels[i, :], labels.shape[0]).\
                         reshape(labels.shape[0],labels.shape[1])
+                        
         l_area = lbls[:,:,i] 
         lbls[:,:,i] = l_area * valid_drusens
     return lbls
     
 def segment_drusen_using_chen_modified_chen_method(path,savePath, method,layerPath="",drusenPath="",enfacePath=""):
-    print "Eliminating false positives..."
+    print("Eliminating false positives...")
     bs = read_b_scans( path, "Input.tif")
     postProcessedMasks=run_chen_modified_chen_method(bs,method=method,\
                         layerPath=layerPath,drusenPath=drusenPath,\
@@ -346,8 +367,8 @@ def segment_drusen_using_chen_modified_chen_method(path,savePath, method,layerPa
     save_masks(postProcessedMasks, refPath=path,savePath=savePath,img_type="Input.tif")              
     
     enfaceDrusenMask=(np.sum(postProcessedMasks,axis=0)>0).astype(int).T
-    misc.imsave(enfacePath+os.sep+"enface-drusen-afterFPE.png",enfaceDrusenMask)
-    print "Done."
+    io.imsave(enfacePath+os.sep+"enface-drusen-afterFPE.png",(enfaceDrusenMask*255).astype("uint8"))
+    print("Done.")
     
 def remove_false_positives_from_gt(drusenPath,savePath,enfacePath=""):
     gt=read_b_scans(drusenPath,"drusen.png")
@@ -373,10 +394,12 @@ def draw_lines_on_mask(rpe , nrpe, shape ):
         nrpe=[]
     if(len(rpe)==0):
         return mask
+    
     rpearr = np.asarray(rpe)
     nrpearr = np.asarray(nrpe)
-    checkRpe = np.abs(rpearr)
-    checkNrpe = np.abs(nrpearr)
+    
+    checkRpe = np.abs(list(rpearr))
+    checkNrpe = np.abs(list(nrpearr))
     if(  np.array_equal(rpearr,checkRpe) and np.array_equal(nrpearr,checkNrpe)):
         mask[rpe[:,1].astype('int'),rpe[:,0].astype('int')] += 1.0
         mask[nrpe[:,1].astype('int'),nrpe[:,0].astype('int')] += 2.0
@@ -418,13 +441,14 @@ def fill_inner_gaps( layer ):
     d_layer = dict(layer)
     prev = -1
     if( len(d_layer.keys())>0):
-        for i in range(int(np.max(d_layer.keys()))):
+        maxId=int(np.max(np.asarray(list(d_layer.keys()))))
+        for i in range(maxId):
             if( not i in d_layer.keys() and prev!=-1):
                 d_layer[i] = prev
                 
             if( i in d_layer.keys() ):
                 prev = d_layer[i]
-        return np.asarray([d_layer.keys(),d_layer.values()]).T
+        return np.asarray([list(d_layer.keys()),list(d_layer.values())]).T
     else:
         return np.asarray([])
     
@@ -449,7 +473,7 @@ def remove_false_positives_chen( projection_image, b_scans):
     woh,heights=compute_width_height_ratio_height_local_max(cca,mask)
     diffBScanLocation=octParams['sizeInZ']/float(b_scans.shape[2]-1)
     isHighRes = diffBScanLocation <  0.1 # Diff less than 100 um
-    wohT=6*((octParams['sizeInZ']/float(b_scans.shape[2]))/(octParams['sizeInX']/float(b_scans.shape[1])))
+    wohT=octParams['widthOverHeightCoeff']*((octParams['sizeInZ']/float(b_scans.shape[2]))/(octParams['sizeInX']/float(b_scans.shape[1])))
     mask3=None
     if( isHighRes ):
 #         Remove drusen that appear in 1 slice
@@ -488,7 +512,7 @@ def remove_false_positives_gt( projection_image, gt):
     diffBScanLocation=octParams['sizeInZ']/float(gt.shape[2]-1)
     isHighRes = diffBScanLocation <  0.1 # Diff less than 100 um
     
-    wohT=6*((octParams['sizeInZ']/float(gt.shape[2]))/(octParams['sizeInX']/float(gt.shape[1])))
+    wohT=octParams['widthOverHeightCoeff']*((octParams['sizeInZ']/float(gt.shape[2]))/(octParams['sizeInX']/float(gt.shape[1])))
     
     mask3=None
     if( isHighRes ):
@@ -523,7 +547,7 @@ def delete_rpe_nrpe_lists(  ):
 def initialize_rpe_nrpe_lists( b_scans,method='chen'):
     debug=False
     for i in range(b_scans.shape[2]):
-        print "Segmenting Drusen in B-scan:#",i
+        print("Segmenting Drusen in B-scan:#",i)
         if(method=='chen'):
             rpe, nrpe = seg_chen(b_scans[:,:,i])
         elif(method=='modifiedChen'):
@@ -542,6 +566,7 @@ def initialize_rpe_nrpe_lists( b_scans,method='chen'):
             mm = draw_lines_on_mask(rpe , nrpe, shape=b_scans[:,:,0].shape )
             show_images([b_scans[:,:,i],mm],1,2)
 
+    
 def smooth_drusen(masks,baseLines,sigma=0.):
     smoothedDrusen=sc.ndimage.gaussian_filter(masks,sigma)
     smoothedDrusen=(smoothedDrusen>0).astype(int)
@@ -616,7 +641,7 @@ def save_rpe_nrpe_drusen(layerPath,druPath,enfacePath,refPath,method):
         area_mask = find_area_btw_RPE_normal_RPE( mask )
         drusen[:,:,i]=area_mask
         hmask[i,:] = np.sum(area_mask, axis=0)
-    print "Saving..."
+    print("Saving...")
     create_directory(layerPath)    
     save_masks(rpeNrpe, refPath=refPath,savePath=layerPath,img_type="Input.tif")              
     create_directory(druPath)  
@@ -626,11 +651,13 @@ def save_rpe_nrpe_drusen(layerPath,druPath,enfacePath,refPath,method):
     projection,masks,baseLines = produce_drusen_projection_image_chen( bScans )
     projection /= np.max(projection) if np.max(projection) != 0.0 else 1.0
     create_directory(enfacePath)
-    misc.imsave(enfacePath+os.sep+"enface.png",projection)
+    
+    io.imsave(enfacePath+os.sep+"enface.png",(projection*255).astype("uint8"))
     
     enfaceDrusenMask=(np.sum(masks,axis=0)>0).astype(int).T
-    misc.imsave(enfacePath+os.sep+"enface-drusen-withoutFPE.png",enfaceDrusenMask)
-    print "Done."
+    io.imsave(enfacePath+os.sep+"enface-drusen-withoutFPE.png",(enfaceDrusenMask*255).astype("uint8"))
+    
+    print("Done.")
 def read_rpe_nrpe_from_image(readPath):
     layers=read_b_scans(readPath,"binmask.png")
     baseLines=np.empty(layers.shape)
@@ -641,9 +668,10 @@ def read_rpe_nrpe_from_image(readPath):
         nrpeImg=(layers[:,:,i]>1).astype(int)
         baseLines[:,:,i]=nrpeImg
         yrpe,xrpe=np.where(rpeImg>0)
-        rpe=np.asarray(zip(xrpe,yrpe))
+        rpe=np.asarray(list(zip(xrpe,yrpe)))
+
         ynrpe,xnrpe=np.where(nrpeImg>0)
-        nrpe=np.asarray(zip(xnrpe,ynrpe))
+        nrpe=np.asarray(list(zip(xnrpe,ynrpe)))
         if(len(rpe)==0):
             xr=np.arange(layers.shape[1])
             yr=np.ones(xr.shape)
@@ -652,7 +680,8 @@ def read_rpe_nrpe_from_image(readPath):
             rpe[:,1]=yr
             nrpe=np.copy(rpe)
         rpe_scan_list.append(rpe)
-        nrpe_scan_list.append(nrpe)    
+        nrpe_scan_list.append(nrpe)
+
     return baseLines
     
 def read_drusen_from_image(readPath):
@@ -706,13 +735,14 @@ def convert_label_uint_to_id(label):
     return label/85 if len(np.unique(label))==4 else label/127
 
 def main_refined_data_set(method, path, savePath):
+    init_meta_info()
     numSubjects=0
     skipProcessedFiles=False
     # Iterate in folders     
     for d1 in os.listdir(path):
         
             numSubjects+=1
-            print "Processing...",d1
+            print("Processing...",d1)
                  
             refPath=path+os.sep+d1+os.sep
             
@@ -728,7 +758,7 @@ def main_refined_data_set(method, path, savePath):
             # Skip already processed OCT scans
             if (skipProcessedFiles and (os.path.exists(p4) and\
                 len([f for f in listdir(refPath) if isfile(join(refPath, f))])>0)):
-                    print "skip ",refPath
+                    print("skip ",refPath)
                     continue
             
             # Create segmentations and store them

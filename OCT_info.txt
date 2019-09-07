@@ -1,0 +1,20 @@
+######################################################################################
+# Here you can fill in the information related to the input OCT. These are necessary #
+# for the algorithms to work properly.									             #  
+######################################################################################
+
+# Set this parameter to Yes in order to use the parameters from Chen et al. paper.
+useDefaultFromChen = No
+
+# OCT related information: Write all sizes in millimeter.
+# sizeX is B-scan width, and sizeY is B-scan height in millimeter.
+sizeInX = 5.80352
+sizeInY = 1.920512
+
+# sizeZ is the length covered by all B-scans (in millimeter).
+sizeInZ = 4.353
+
+# Set parameters for False Positive Elimination
+widthOverHeightCoeff = 6
+intensity = 4
+smoothingSigma = 0.1

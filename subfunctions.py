@@ -725,7 +725,7 @@ def keepLabels(img,ix,iy):
         label=lbim[yval,ix[x]]
         l2k.append(label)
         l2k=list(np.unique(l2k))
-    l2r = range(len(ln))
+    l2r = list(range(len(ln)))
     for x in range(0,len(l2k)):
         l2r.remove(l2k[x])
 

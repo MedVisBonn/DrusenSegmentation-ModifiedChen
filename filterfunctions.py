@@ -537,10 +537,6 @@ def segmentLines_new(inputImage,centerLine,debug=False):
       qimg= rank.equalize(gausImg, selem=selem)
       qimg=qimg/255.0
       qqimg=np.copy(qimg)
-      plt.imshow(qimg,cmap="gray",interpolation="None")
-      mng = plt.get_current_fig_manager()
-      plt.plot(doX,doY,color='g',lw=3)
-      plt.plot(upX,upY,color='r',lw=3)
 
       qimg[qimg>=0.8]=1
       qimg[qimg<0.8]=0
@@ -548,13 +544,6 @@ def segmentLines_new(inputImage,centerLine,debug=False):
       removeAbouve(qimg,upX,upY,0.0,0)
       removeBelow(qimg,doX,doY,0.0,0)
       qimg=dilation(qimg,cross)
-      plt.close("all")
-      plt.title('qimg')
-      plt.imshow(qimg,cmap="gray",interpolation="None")
-      mng = plt.get_current_fig_manager()
-      plt.plot(doX,doY,color='g',lw=3)
-      plt.plot(upX,upY,color='r',lw=3)
-      plt.close("all")
 
       rimg=improveDown(qimg,0)
       restoreBigLabels(rimg,qimg,200)
@@ -563,14 +552,6 @@ def segmentLines_new(inputImage,centerLine,debug=False):
 
       restoreBigLabels(rimg,qimg,200)
       doX,doY=getLowerLine(rimg)
-
-      plt.close("all")
-      plt.imshow(rimg,cmap="gray",interpolation="None")
-      mng = plt.get_current_fig_manager()
-      plt.plot(upX,upY,color='g',lw=2)
-      plt.plot(doX,doY,color='r',lw=2)
-      plt.close("all")
-
 
 ############### IMPROVE TOP LINE
       selem=np.ones([10,1],dtype=np.uint8)
@@ -582,29 +563,13 @@ def segmentLines_new(inputImage,centerLine,debug=False):
 
       removeAbouve(qimg,upX,upY,0.0,0)
       removeBelow(qimg,doX,doY,0.0,0)
-      plt.imshow(qimg,cmap='gray')
-      mng = plt.get_current_fig_manager()
-      plt.plot(doX,doY,color='g',lw=3)
-      plt.plot(upX,upY,color='r',lw=3)
 
       nupX,nupY=improveTop(qimg,upX,upY)
-      plt.imshow(qimg,cmap='gray')
-      mng = plt.get_current_fig_manager()
-      plt.plot(doX,doY,color='g',lw=3)
-      plt.plot(nupX,nupY,color='r',lw=3)
-      plt.close('all')
 
-
-################# ACT SCNAKE STUFF $$$$$$$$
       fX=np.arange(0,width)
       fY = np.interp(fX,nupX,nupY)
       fY2 = np.interp(fX,doX,doY)
       CRX=fY+fY2
       MID=0.5*CRX
-     
-      plt.imshow(img,cmap='gray')
-      mng = plt.get_current_fig_manager()
-      plt.plot(fX,MID,color='g',lw=3)
-      plt.close('all')
       CENTER=np.array([fX,MID]).T
       return CENTER
