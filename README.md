@@ -8,7 +8,7 @@ Requirements
 
 The scripts require
 
-* Python 2.7: https://www.python.org/downloads/
+* Python 3.7: https://www.python.org/downloads/
 
 * Other python packages such as numpy, scipy, skimage, argparse, os, sys, and matplotlib should be pre-installed 
 
