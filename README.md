@@ -23,8 +23,14 @@ After package installation, you can simply run the code with the demo dataset. T
 python --method chen --source <path to OCT volume> --dest <path to destination folder> # for Chen et al. [1] algorithm
 python --method modifiedChen --source <path to OCT volume> --dest <path to destination folder> # for the modified Chen [...] algorithm
 ```
-Per B-scan drusen maps will be saved under ```<dest>/withoutFPE``` and ```<dest>/afterFPE```, that are the segmentation before and after false positive elimination step. An en-face projection of drusen segmentation in both cases will be saved under ```<dest>/metaData/[scanName]/enface```.
-Before running the algorithm on other OCT volumes, edit ```OCT_info.txt``` respectively.
+Per B-scan drusen maps will be saved under ```<dest>/withoutFPE```. An en-face projection of drusen segmentation will be saved under ```<dest>/metaData/[scanName]/enface```. In order to automatically eliminate falsely detected drusen, use ```--fpe``` flag in the command line. The results will be saved under ```<dest>/afterFPE```. Example
+
+```
+python --method chen --source <path to OCT volume> --dest <path to destination folder> --fpe 
+python --method modifiedChen --source <path to OCT volume> --dest <path to destination folder> --fpe 
+```
+
+Before running the algorithms on other OCT volumes, edit ```OCT_info.txt``` respectively.
 
 References
 ----------
