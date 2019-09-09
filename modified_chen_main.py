@@ -734,7 +734,7 @@ def imread(filename):
 def convert_label_uint_to_id(label):
     return label/85 if len(np.unique(label))==4 else label/127
 
-def main_refined_data_set(method, path, savePath):
+def main_refined_data_set(method, path, savePath, applyFPE):
     init_meta_info()
     numSubjects=0
     skipProcessedFiles=False
@@ -765,10 +765,12 @@ def main_refined_data_set(method, path, savePath):
             save_rpe_nrpe_drusen(p1,p2,p3,refPath,method)
             
             # FPE STEP
-            segment_drusen_using_chen_modified_chen_method(refPath,p4,method,p1,p2,p3)
+            if(applyFPE):
+                segment_drusen_using_chen_modified_chen_method(refPath,p4,method,p1,p2,p3)
 
 def main(args):
-    main_refined_data_set(args.method, args.source, args.dest)
+    
+    main_refined_data_set(args.method, args.source, args.dest, args.fpe)
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -779,6 +781,7 @@ if __name__ == "__main__":
         "--source", action="store", required=True, help="Path to the folder that contains OCT volumes.")
     parser.add_argument(
         "--dest", action="store", required=True, help="Path to save drusen segmentation into.")
-    
+    parser.add_argument(
+        "--fpe", action="store_true", required=False, default=False, help="Automatically eliminate falsely detected drusen.")
     args = parser.parse_args()
     main(args)
