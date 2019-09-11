@@ -38,11 +38,11 @@ References
 [1] Chen, Qiang, et al. "Automated drusen segmentation and quantification in SD-OCT images." Medical image analysis 17.8 (2013): 1058-1072.
   
 
-Cite
-----------
-You are welcome to cite the corresponding publication
+%Cite
+%----------
+%You are welcome to cite the corresponding publication
 
-* Our paper
+%* Our paper
 
   
 Git Authors
