@@ -17,7 +17,7 @@ to run.
 Reproduction
 ---------------
 
-After package installation, you can simply run the code with the demo dataset. The running command is as below.
+After package installation, you can simply run the code with a demo dataset (which will be uploaded soon). The running command is as below.
 
 ```
 python --method chen --source <path to OCT volume> --dest <path to destination folder> # for Chen et al. [1] algorithm
