@@ -1,5 +1,6 @@
 import os
 import cv2
+import MAFOD as mf
 import argparse
 import numpy as np
 import scipy as sc
@@ -305,8 +306,15 @@ def remove_non_bright_spots( projection_img, drusen_mask, threshold = 4 ):
 #==============================================================================
 # Modified Chen Method
 #==============================================================================
-def seg_modified_chen( inputImage,debug=False ):
-  filter1=FF.FilterBilateral(inputImage)
+def seg_modified_chen( inputImage, useMAFOD, debug=False ):
+  if(useMAFOD):
+      filter1=mf.MAFOD_filter(inputImage,octParams['sizeInY']/float(inputImage.shape[0]),\
+                              octParams['sizeInX']/float(inputImage.shape[1]),\
+                              int(octParams['stoppingTime']),int(octParams['numberOfCycles']),\
+                              octParams['lambda'])
+  else:
+      filter1=FF.FilterBilateral(inputImage)
+      
   threshold=FF.computeHistogrammThreshold(filter1,octParams['sizeInY'])
   RNFL=FF.getTopRNFL(filter1,threshold,False)
   if( len(RNFL) ==0):
@@ -419,8 +427,14 @@ def find_area_btw_RPE_normal_RPE( mask ):
             area_mask[v1:v2,i] = 1
     return area_mask
         
-def seg_chen( inputImage ):
-    filter1=FF.FilterBilateral(inputImage)
+def seg_chen( inputImage, useMAFOD):
+    if(useMAFOD):
+        filter1=mf.MAFOD_filter(inputImage,octParams['sizeInY']/float(inputImage.shape[0]),\
+                              octParams['sizeInX']/float(inputImage.shape[1]),\
+                              int(octParams['stoppingTime']),int(octParams['numberOfCycles']),\
+                              octParams['lambda'])
+    else:
+        filter1=FF.FilterBilateral(inputImage)
     threshold=FF.computeHistogrammThreshold(filter1,octParams['sizeInY'])
     RNFL=FF.getTopRNFL(filter1,threshold,False)
     mask=FF.thresholdImage(filter1,threshold)
@@ -544,14 +558,14 @@ def delete_rpe_nrpe_lists(  ):
     del rpe_scan_list[:]
     del nrpe_scan_list[:]  
     
-def initialize_rpe_nrpe_lists( b_scans,method='chen'):
+def initialize_rpe_nrpe_lists( b_scans,method='chen',useMAFOD=False):
     debug=False
     for i in range(b_scans.shape[2]):
         print("Segmenting Drusen in B-scan:#",i)
         if(method=='chen'):
-            rpe, nrpe = seg_chen(b_scans[:,:,i])
+            rpe, nrpe = seg_chen(b_scans[:,:,i],useMAFOD)
         elif(method=='modifiedChen'):
-            rpe, nrpe = seg_modified_chen(b_scans[:,:,i])
+            rpe, nrpe = seg_modified_chen(b_scans[:,:,i],useMAFOD)
         if(len(rpe)==0):
             xr=np.arange(b_scans.shape[1])
             yr=np.ones(xr.shape)
@@ -624,9 +638,9 @@ def run_chen_modified_chen_method(b_scans,method,savePath="",layerPath="",\
     enFaceMask=(np.sum(filteredMasks,axis=0)>0).astype(int).T
     return filteredMasks
 
-def save_rpe_nrpe_drusen(layerPath,druPath,enfacePath,refPath,method):
+def save_rpe_nrpe_drusen(layerPath,druPath,enfacePath,refPath,method,useMAFOD):
     bScans = read_b_scans( refPath, "Input.tif")
-    initialize_rpe_nrpe_lists(bScans,method)
+    initialize_rpe_nrpe_lists(bScans,method,useMAFOD)
     hmask = np.zeros((bScans.shape[2], bScans.shape[1]))
     rpeNrpe=np.empty(bScans.shape)
     drusen=np.empty(bScans.shape)
@@ -734,7 +748,7 @@ def imread(filename):
 def convert_label_uint_to_id(label):
     return label/85 if len(np.unique(label))==4 else label/127
 
-def main_refined_data_set(method, path, savePath, applyFPE):
+def main_refined_data_set(method, path, savePath, applyFPE, useMAFOD):
     init_meta_info()
     numSubjects=0
     skipProcessedFiles=False
@@ -762,7 +776,7 @@ def main_refined_data_set(method, path, savePath, applyFPE):
                     continue
             
             # Create segmentations and store them
-            save_rpe_nrpe_drusen(p1,p2,p3,refPath,method)
+            save_rpe_nrpe_drusen(p1,p2,p3,refPath,method,useMAFOD)
             
             # FPE STEP
             if(applyFPE):
@@ -770,7 +784,7 @@ def main_refined_data_set(method, path, savePath, applyFPE):
 
 def main(args):
     
-    main_refined_data_set(args.method, args.source, args.dest, args.fpe)
+    main_refined_data_set(args.method, args.source, args.dest, args.fpe,args.mafod)
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -783,5 +797,7 @@ if __name__ == "__main__":
         "--dest", action="store", required=True, help="Path to save drusen segmentation into.")
     parser.add_argument(
         "--fpe", action="store_true", required=False, default=False, help="Automatically eliminate falsely detected drusen.")
+    parser.add_argument(
+        "--mafod", action="store_true", required=False, default=False, help="Uses MAFOD filter instead of Bilateral.")
     args = parser.parse_args()
     main(args)

@@ -18,3 +18,9 @@ sizeInZ = 4.353
 widthOverHeightCoeff = 6
 intensity = 4
 smoothingSigma = 0.1
+
+
+# Parameters related to MAFOD filter
+stoppingTime=30
+numberOfCycles=2
+lambda=0.01
