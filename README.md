@@ -29,6 +29,7 @@ Per B-scan drusen maps will be saved under ```<dest>/withoutFPE```. An en-face p
 python --method chen --source <path to OCT volume> --dest <path to destination folder> --fpe 
 python --method modifiedChen --source <path to OCT volume> --dest <path to destination folder> --fpe 
 ```
+In order to use multi-scale anisotropic fourth-order diffusion (MAFOD) filter proposed by Gorgi Zadeh et al. [2], instead of bilateral filter, type ```--mafod``` in the command line. The FEDFJLIB library, by Grewenig et al. [3] is used to implement MAFOD filter with the fast explicit diffusion (FED) scheme.
 
 Before running the algorithms on other OCT volumes, edit ```OCT_info.txt``` respectively.
 
@@ -37,6 +38,9 @@ References
 
 [1] Chen, Qiang, et al. "Automated drusen segmentation and quantification in SD-OCT images." Medical image analysis 17.8 (2013): 1058-1072.
   
+[2] Gorgi Zadeh, Shekoufeh, et al. "Multi-scale Anisotropic Fourth-Order Diffusion Improves Ridge and Valley Localization." Journal of Mathematical Imaging and Vision 59.2 (2017): 257-269.
+
+[3] Grewenig, Sven, et al. "From box filtering to fast explicit diffusion." Joint Pattern Recognition Symposium. Springer, Berlin, Heidelberg, 2010.
 
 Cite
 ----------
