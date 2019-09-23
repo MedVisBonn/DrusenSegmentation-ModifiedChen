@@ -29,7 +29,7 @@ Per B-scan drusen maps will be saved under ```<dest>/withoutFPE```. An en-face p
 python --method chen --source <path to OCT volume> --dest <path to destination folder> --fpe 
 python --method modifiedChen --source <path to OCT volume> --dest <path to destination folder> --fpe 
 ```
-In order to use multi-scale anisotropic fourth-order diffusion (MAFOD) filter proposed by Gorgi Zadeh et al. [2], instead of bilateral filter, type ```--mafod``` in the command line. The FED library, by Grewenig et al. [3] was used to implement MAFOD filter with the fast explicit diffusion (FED) scheme.
+In order to use multi-scale anisotropic fourth-order diffusion (MAFOD) filter proposed by Gorgi Zadeh et al. [2], instead of bilateral filter, type ```--mafod``` in the command line. The FED library (in fedfjlib folder), by Grewenig et al. [3] was used to implement MAFOD filter with the fast explicit diffusion (FED) scheme.
 
 Before running the algorithms on other OCT volumes, edit ```OCT_info.txt``` respectively.
 
