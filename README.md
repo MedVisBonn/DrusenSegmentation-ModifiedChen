@@ -17,7 +17,7 @@ to run.
 Reproduction
 ---------------
 
-After package installation, you can simply run the code with the demo dataset in ```sample-scan'''. The running command is as below.
+After package installation, you can simply run the code with the demo dataset in ```sample-scan```. The running command is as below.
 
 ```
 python modified_chen_main.py --method chen --source <path to OCT volumes> --dest <path to destination folder> # for Chen et al. [1] algorithm
