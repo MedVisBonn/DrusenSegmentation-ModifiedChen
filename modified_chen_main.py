@@ -135,8 +135,6 @@ def filter_drusen_by_size( dmask, slice_num=-1 ):
     filtered_mask[np.where(w_o_h  >  w_over_h_ratio_threshold)] = 0.0
     filtered_mask[np.where(w_o_h == 0.0)] = 0.0
    
-    if( slice_num >= 700 and slice_num<= 75 ):
-        show_images([drusen_mask, w_o_h,height,filtered_mask ], 2,2,["input","woh","height", "final"])
     return filtered_mask
     
 def remove_drusen_with_1slice_size( projection_mask ):
@@ -209,7 +207,6 @@ def compute_component_width(cca,mask ):
 def compute_width_height_ratio_height_local_max(cca,mask ):
         mx_h = compute_heights( cca,mask )
         mx_w = compute_component_width( cca,mask )
-#        mx_h[mx_h == 0] = 1
         forDiv=np.copy(mx_h)
         forDiv[mx_h==0]=1
         return mx_w.astype('float')/(forDiv.astype('float')), mx_h
@@ -253,7 +250,7 @@ def produce_drusen_projection_image_chen( b_scans ):
         rpe = rpe_scan_list[i]
         nrpe = nrpe_scan_list[i]
 
-        rpe = fill_inner_gaps(rpe)
+        rpe = fill_inner_gaps2(rpe)
         rpe = rpe.astype('int')
         nrpe = nrpe.astype('int')
         nrpe[np.where(nrpe[:,1]<0),1]=0
@@ -317,6 +314,29 @@ def seg_modified_chen( inputImage, useMAFOD, debug=False ):
       
   threshold=FF.computeHistogrammThreshold(filter1,octParams['sizeInY'])
   RNFL=FF.getTopRNFL(filter1,threshold,False)
+
+  if(debug):
+      #show top RNFL on input
+      tmp=np.copy(filter1)
+      tmp=tmp.astype(float)
+      tmp=tmp/np.max(tmp)
+      rgbTmp=np.empty((filter1.shape[0],filter1.shape[1],3))
+      rgbTmp[:,:,0]=tmp
+      rgbTmp[:,:,1]=tmp
+      rgbTmp[:,:,2]=tmp
+      
+      rgbTmp[RNFL[:,1],RNFL[:,0],0]=1.
+      rgbTmp[RNFL[:,1],RNFL[:,0],1]=0.
+      rgbTmp[RNFL[:,1],RNFL[:,0],2]=0.
+      
+      rgbTmp[RNFL[:,1]+1,RNFL[:,0],0]=1.
+      rgbTmp[RNFL[:,1]+1,RNFL[:,0],1]=0.
+      rgbTmp[RNFL[:,1]+1,RNFL[:,0],2]=0.
+      
+      rgbTmp[RNFL[:,1]-1,RNFL[:,0],0]=1.
+      rgbTmp[RNFL[:,1]-1,RNFL[:,0],1]=0.
+      rgbTmp[RNFL[:,1]-1,RNFL[:,0],2]=0.
+      
   if( len(RNFL) ==0):
         return [],[]
   mask=FF.thresholdImage(filter1,threshold)
@@ -324,10 +344,96 @@ def seg_modified_chen( inputImage, useMAFOD, debug=False ):
   mask2=FF.removeTopRNFL(filter1,mask,RNFL,bandRadius=bandRadius)
   FF.extractRegionOfInteresst(filter1,mask2,bw=bandRadius);
   centerLine1=FF.getCenterLine(mask2)
-  centerLine2=FF.segmentLines_new(filter1,centerLine1,debug)
+  centerLine2,mask3=FF.segmentLines_new(filter1,centerLine1,debug)
+  
+  if(False):
+      tmp=np.copy(mask3)
+      tmp=tmp.astype(float)
+      tmp=tmp/np.max(tmp)
+      cl=centerLine2.astype(int)
+      cl=connect_all(cl)
+      rgbTmp=np.empty((filter1.shape[0],filter1.shape[1],3))
+      rgbTmp[:,:,0]=tmp
+      rgbTmp[:,:,1]=tmp
+      rgbTmp[:,:,2]=tmp
+      rgbTmp[cl[:,1],cl[:,0],0]=1.
+      rgbTmp[cl[:,1],cl[:,0],1]=0.
+      rgbTmp[cl[:,1],cl[:,0],2]=0.
+      
+      rgbTmp[cl[:,1]+1,cl[:,0],0]=1.
+      rgbTmp[cl[:,1]+1,cl[:,0],1]=0.
+      rgbTmp[cl[:,1]+1,cl[:,0],2]=0.
+      
+      rgbTmp[cl[:,1]-1,cl[:,0],0]=1.
+      rgbTmp[cl[:,1]-1,cl[:,0],1]=0.
+      rgbTmp[cl[:,1]-1,cl[:,0],2]=0.
+      
+#      show_images([rgbTmp],1,1)
+      
   itterations=5;
   dursenDiff=5;
   idealRPE=FF.normal_RPE_estimation(filter1,centerLine2,itterations,dursenDiff)
+
+  if(True):
+      tmp=np.copy(filter1)
+      tmp=tmp.astype(float)
+      tmp=tmp/np.max(tmp)
+      cl=centerLine2.astype(int)
+      cl=fill_inner_gaps2(cl)
+      cl=connect_all(cl)
+      rgbTmp=np.empty((filter1.shape[0],filter1.shape[1],3))
+      rgbTmp[:,:,0]=tmp
+      rgbTmp[:,:,1]=tmp
+      rgbTmp[:,:,2]=tmp
+      rgbTmp[cl[:,1],cl[:,0],0]=1.
+      rgbTmp[cl[:,1],cl[:,0],1]=0.
+      rgbTmp[cl[:,1],cl[:,0],2]=0.
+      
+      rgbTmp[cl[:,1]+1,cl[:,0],0]=1.
+      rgbTmp[cl[:,1]+1,cl[:,0],1]=0.
+      rgbTmp[cl[:,1]+1,cl[:,0],2]=0.
+      
+      rgbTmp[cl[:,1]-1,cl[:,0],0]=1.
+      rgbTmp[cl[:,1]-1,cl[:,0],1]=0.
+      rgbTmp[cl[:,1]-1,cl[:,0],2]=0.
+      
+      cl2=idealRPE.astype(int)
+      cl2=fill_inner_gaps2(cl2)
+      cl2=connect_all(cl2)
+      rgbTmp[cl2[:,1],cl2[:,0],0]=1.
+      rgbTmp[cl2[:,1],cl2[:,0],1]=1.
+      rgbTmp[cl2[:,1],cl2[:,0],2]=0.
+      
+      rgbTmp[cl2[:,1]+1,cl2[:,0],0]=1.
+      rgbTmp[cl2[:,1]+1,cl2[:,0],1]=1.
+      rgbTmp[cl2[:,1]+1,cl2[:,0],2]=0.
+      
+      rgbTmp[cl2[:,1]-1,cl2[:,0],0]=1.
+      rgbTmp[cl2[:,1]-1,cl2[:,0],1]=1.
+      rgbTmp[cl2[:,1]-1,cl2[:,0],2]=0.
+      
+      rgbTmp=np.empty((filter1.shape[0],filter1.shape[1],3))
+      rgbTmp[:,:,0]=tmp
+      rgbTmp[:,:,1]=tmp
+      rgbTmp[:,:,2]=tmp
+      
+      rgbTmp[cl[:,1],cl[:,0],0]=1.
+      rgbTmp[cl[:,1],cl[:,0],1]=0.
+      rgbTmp[cl[:,1],cl[:,0],2]=0.
+      
+      rgbTmp[cl2[:,1],cl2[:,0],0]=1.
+      rgbTmp[cl2[:,1],cl2[:,0],1]=1.
+      rgbTmp[cl2[:,1],cl2[:,0],2]=0.
+      
+      
+      mask = draw_lines_on_mask(cl, cl2, filter1.shape)
+      area_mask = find_area_btw_RPE_normal_RPE( mask )
+      yy,xx=np.where(area_mask>0)
+      rgbTmp[yy,xx,0]=1.
+      rgbTmp[yy,xx,1]=rgbTmp[yy,xx,1]*0.8
+      rgbTmp[yy,xx,2]=rgbTmp[yy,xx,1]*0.8
+      
+  
   return centerLine2, idealRPE
 
 def save_masks(masks,refPath,savePath,img_type="None"):
@@ -427,7 +533,7 @@ def find_area_btw_RPE_normal_RPE( mask ):
             area_mask[v1:v2,i] = 1
     return area_mask
         
-def seg_chen( inputImage, useMAFOD):
+def seg_chen( inputImage, useMAFOD,debug=False):
     if(useMAFOD):
         filter1=mf.MAFOD_filter(inputImage,octParams['sizeInY']/float(inputImage.shape[0]),\
                               octParams['sizeInX']/float(inputImage.shape[1]),\
@@ -435,8 +541,33 @@ def seg_chen( inputImage, useMAFOD):
                               octParams['lambda'])
     else:
         filter1=FF.FilterBilateral(inputImage)
+    
     threshold=FF.computeHistogrammThreshold(filter1,octParams['sizeInY'])
     RNFL=FF.getTopRNFL(filter1,threshold,False)
+    if(debug):
+      #show top RNFL on input
+      tmp=np.copy(filter1)
+      tmp=tmp.astype(float)
+      tmp=tmp/np.max(tmp)
+      rgbTmp=np.empty((filter1.shape[0],filter1.shape[1],3))
+      rgbTmp[:,:,0]=tmp
+      rgbTmp[:,:,1]=tmp
+      rgbTmp[:,:,2]=tmp
+      
+      rgbTmp[RNFL[:,1],RNFL[:,0],0]=1.
+      rgbTmp[RNFL[:,1],RNFL[:,0],1]=0.
+      rgbTmp[RNFL[:,1],RNFL[:,0],2]=0.
+      
+      rgbTmp[RNFL[:,1]+1,RNFL[:,0],0]=1.
+      rgbTmp[RNFL[:,1]+1,RNFL[:,0],1]=0.
+      rgbTmp[RNFL[:,1]+1,RNFL[:,0],2]=0.
+      
+      rgbTmp[RNFL[:,1]-1,RNFL[:,0],0]=1.
+      rgbTmp[RNFL[:,1]-1,RNFL[:,0],1]=0.
+      rgbTmp[RNFL[:,1]-1,RNFL[:,0],2]=0.
+      
+#      show_images([rgbTmp],1,1)
+      
     mask=FF.thresholdImage(filter1,threshold)
     if( len(RNFL) ==0):
         return [],[]
@@ -446,9 +577,98 @@ def seg_chen( inputImage, useMAFOD):
     mask2=FF.removeTopRNFL(filter1,mask,RNFL,bandRadius)
     
     centerLine1=FF.getCenterLine(mask2)
+    
+    if(False):
+      tmp=np.copy(mask2)
+      tmp=tmp.astype(float)
+      tmp=tmp/np.max(tmp)
+      cl=centerLine1.astype(int)
+      cl=fill_inner_gaps2(cl)
+      rgbTmp=np.empty((filter1.shape[0],filter1.shape[1],3))
+      rgbTmp[:,:,0]=tmp
+      rgbTmp[:,:,1]=tmp
+      rgbTmp[:,:,2]=tmp
+      rgbTmp[cl[:,1],cl[:,0],0]=1.
+      rgbTmp[cl[:,1],cl[:,0],1]=0.
+      rgbTmp[cl[:,1],cl[:,0],2]=0.
+      
+      rgbTmp[cl[:,1]+1,cl[:,0],0]=1.
+      rgbTmp[cl[:,1]+1,cl[:,0],1]=0.
+      rgbTmp[cl[:,1]+1,cl[:,0],2]=0.
+      
+      rgbTmp[cl[:,1]-1,cl[:,0],0]=1.
+      rgbTmp[cl[:,1]-1,cl[:,0],1]=0.
+      rgbTmp[cl[:,1]-1,cl[:,0],2]=0.
+      
+#      show_images([rgbTmp],1,1)
+      
     itterations=5;
     dursenDiff=5;
     idealRPE=FF.normal_RPE_estimation(filter1,centerLine1,itterations,dursenDiff)
+    
+    if(True):
+      tmp=np.copy(inputImage)
+      tmp=tmp.astype(float)
+      tmp=tmp/np.max(tmp)
+      cl=centerLine1.astype(int)
+      cl=fill_inner_gaps2(cl)
+      cl=connect_all(cl)
+      rgbTmp=np.empty((filter1.shape[0],filter1.shape[1],3))
+      rgbTmp[:,:,0]=tmp
+      rgbTmp[:,:,1]=tmp
+      rgbTmp[:,:,2]=tmp
+      rgbTmp[cl[:,1],cl[:,0],0]=1.
+      rgbTmp[cl[:,1],cl[:,0],1]=0.
+      rgbTmp[cl[:,1],cl[:,0],2]=0.
+      
+      rgbTmp[cl[:,1]+1,cl[:,0],0]=1.
+      rgbTmp[cl[:,1]+1,cl[:,0],1]=0.
+      rgbTmp[cl[:,1]+1,cl[:,0],2]=0.
+      
+      rgbTmp[cl[:,1]-1,cl[:,0],0]=1.
+      rgbTmp[cl[:,1]-1,cl[:,0],1]=0.
+      rgbTmp[cl[:,1]-1,cl[:,0],2]=0.
+      
+      cl2=idealRPE.astype(int)
+      cl2=fill_inner_gaps2(cl2)
+      cl2=connect_all(cl2)
+      rgbTmp[cl2[:,1],cl2[:,0],0]=1.
+      rgbTmp[cl2[:,1],cl2[:,0],1]=1.
+      rgbTmp[cl2[:,1],cl2[:,0],2]=0.
+      
+      rgbTmp[cl2[:,1]+1,cl2[:,0],0]=1.
+      rgbTmp[cl2[:,1]+1,cl2[:,0],1]=1.
+      rgbTmp[cl2[:,1]+1,cl2[:,0],2]=0.
+      
+      rgbTmp[cl2[:,1]-1,cl2[:,0],0]=1.
+      rgbTmp[cl2[:,1]-1,cl2[:,0],1]=1.
+      rgbTmp[cl2[:,1]-1,cl2[:,0],2]=0.
+      
+      
+#      show_images([rgbTmp],1,1)
+      
+      rgbTmp=np.empty((filter1.shape[0],filter1.shape[1],3))
+      rgbTmp[:,:,0]=tmp
+      rgbTmp[:,:,1]=tmp
+      rgbTmp[:,:,2]=tmp
+      
+      rgbTmp[cl[:,1],cl[:,0],0]=1.
+      rgbTmp[cl[:,1],cl[:,0],1]=0.
+      rgbTmp[cl[:,1],cl[:,0],2]=0.
+  
+      
+      rgbTmp[cl2[:,1],cl2[:,0],0]=1.
+      rgbTmp[cl2[:,1],cl2[:,0],1]=1.
+      rgbTmp[cl2[:,1],cl2[:,0],2]=0.
+      
+      mask = draw_lines_on_mask(cl, cl2, filter1.shape)
+      area_mask = find_area_btw_RPE_normal_RPE( mask )
+      yy,xx=np.where(area_mask>0)
+      rgbTmp[yy,xx,0]=1.
+      rgbTmp[yy,xx,1]=rgbTmp[yy,xx,1]*0.8
+      rgbTmp[yy,xx,2]=rgbTmp[yy,xx,1]*0.8
+      
+#      show_images([rgbTmp],1,1)
     return centerLine1, idealRPE
     
 def fill_inner_gaps( layer ):
@@ -465,8 +685,60 @@ def fill_inner_gaps( layer ):
         return np.asarray([list(d_layer.keys()),list(d_layer.values())]).T
     else:
         return np.asarray([])
+
+def connect_all( layer ):
+    d_layer = dict(layer)
+    connectedLayer=[]
+    if( len(d_layer.keys())>0):
+        maxId=int(np.max(np.asarray(list(d_layer.keys()))))
+        minId=int(np.min(np.asarray(list(d_layer.keys()))))
+        for i in range(minId,maxId+1):
+            if( i in d_layer.keys() ):
+                currY=d_layer[i]
+                connectedLayer.append([i,currY])
+                if((i+1) in d_layer.keys()):
+                    nextY=d_layer[i+1]
+                    for j in range(abs(nextY-currY)):
+                        if(nextY>currY):
+                            connectedLayer.append([i,currY+j])
+                        else:
+                            connectedLayer.append([i,currY-j])
+                
+        return np.asarray(connectedLayer)
+    else:
+        return np.asarray([])
     
-    
+def fill_inner_gaps2( layer ):
+    d_layer = dict(layer)
+    prev = -1
+    minY=int(np.min(np.asarray(list(d_layer.values()))))
+    maxY=int(np.max(np.asarray(list(d_layer.values()))))
+    if( len(d_layer.keys())>0):
+        maxId=int(np.max(np.asarray(list(d_layer.keys()))))
+        minId=int(np.min(np.asarray(list(d_layer.keys()))))
+        for i in range(minId,maxId+1):
+            if( not i in d_layer.keys() ):
+                endP=-1
+                startingP=prev
+                startingI=i-1
+                while(endP==-1):
+                    i=i+1
+                    if( i in d_layer.keys()):
+                        endP=d_layer[i]
+                        endI=i
+                m=(endP-startingP)/(endI-startingI)
+                for j in range(startingI,endI+1):
+                    d_layer[j] = max(minY,min(maxY,int(m*(j-startingI)+startingP)))
+                
+            if( not i in d_layer.keys() and prev!=-1):
+                d_layer[i] = prev
+                
+            if( i in d_layer.keys() ):
+                prev = d_layer[i]
+        return np.asarray([list(d_layer.keys()),list(d_layer.values())]).T
+    else:
+        return np.asarray([])
+        
 def find_drusen_in_stacked_slices_chen( b_scans ):
     hmask = np.zeros((b_scans.shape[2], b_scans.shape[1]))
     for i in range(b_scans.shape[2]):
@@ -578,7 +850,7 @@ def initialize_rpe_nrpe_lists( b_scans,method='chen',useMAFOD=False):
         nrpe_scan_list.append(nrpe)
         if(debug):
             mm = draw_lines_on_mask(rpe , nrpe, shape=b_scans[:,:,0].shape )
-            show_images([b_scans[:,:,i],mm],1,2)
+#            show_images([b_scans[:,:,i],mm],1,2)
 
     
 def smooth_drusen(masks,baseLines,sigma=0.):
@@ -648,8 +920,8 @@ def save_rpe_nrpe_drusen(layerPath,druPath,enfacePath,refPath,method,useMAFOD):
         b_scan = bScans[:,:,i]
         rpe  = rpe_scan_list[i]
         nrpe = nrpe_scan_list[i]
-        rpe = fill_inner_gaps(rpe)
-        nrpe = fill_inner_gaps(nrpe)
+        rpe = fill_inner_gaps2(rpe)
+        nrpe = fill_inner_gaps2(nrpe)
         mask = draw_lines_on_mask(rpe, nrpe, b_scan.shape)
         rpeNrpe[:,:,i]=mask
         area_mask = find_area_btw_RPE_normal_RPE( mask )

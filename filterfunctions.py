@@ -291,7 +291,24 @@ def removeOutliers(img,bandRadius):
     temp[lbim>=0]=0
     return temp
   
-  
+def show_images( images, r, c, titles = [], d = 0 , save_path = "" , block = True):
+    i = 1
+    for img in images:
+        ax = plt.subplot( r, c, i )
+        ax.xaxis.set_visible( False )
+        ax.yaxis.set_visible( False )
+        if( len(titles) != 0 ):
+            ax.set_title( titles[i-1] )
+        if( len(img.shape) > 2 ):
+            plt.imshow( img )
+        else:
+            plt.imshow( img , cmap = plt.get_cmap('gray'))
+        i += 1
+    if( save_path != "" ):
+        plt.savefig(save_path+".png")
+        plt.close()
+    else:
+        plt.show(block) 
 def removeTopRNFL(img,mask,line,bandRadius):
     height,width=img.shape
     temp=np.copy(mask)
@@ -304,6 +321,57 @@ def removeTopRNFL(img,mask,line,bandRadius):
     ypos=curve[:,1]
 
     debug=0
+    
+    if(debug==1):
+      tmp=np.copy(mask)
+      tmp=tmp.astype(float)
+      tmp=tmp/np.max(tmp)
+      rgbTmp=np.empty((mask.shape[0],mask.shape[1],3))
+      rgbTmp[:,:,0]=tmp
+      rgbTmp[:,:,1]=tmp
+      rgbTmp[:,:,2]=tmp
+      
+      rgbTmp[line[:,1],line[:,0],0]=1.
+      rgbTmp[line[:,1],line[:,0],1]=0.
+      rgbTmp[line[:,1],line[:,0],2]=0.
+      
+      rgbTmp[line[:,1]+1,line[:,0],0]=1.
+      rgbTmp[line[:,1]+1,line[:,0],1]=0.
+      rgbTmp[line[:,1]+1,line[:,0],2]=0.
+      
+      rgbTmp[line[:,1]-1,line[:,0],0]=1.
+      rgbTmp[line[:,1]-1,line[:,0],1]=0.
+      rgbTmp[line[:,1]-1,line[:,0],2]=0.
+      
+      show_images([rgbTmp],1,1)
+      
+      # Yellow band
+      rgbTmp[line[:,1]+bandRadius,line[:,0],0]=1.
+      rgbTmp[line[:,1]+bandRadius,line[:,0],1]=1.
+      rgbTmp[line[:,1]+bandRadius,line[:,0],2]=0.
+      
+      rgbTmp[line[:,1]+bandRadius+1,line[:,0],0]=1.
+      rgbTmp[line[:,1]+bandRadius+1,line[:,0],1]=1.
+      rgbTmp[line[:,1]+bandRadius+1,line[:,0],2]=0.
+      
+      rgbTmp[line[:,1]+bandRadius-1,line[:,0],0]=1.
+      rgbTmp[line[:,1]+bandRadius-1,line[:,0],1]=1.
+      rgbTmp[line[:,1]+bandRadius-1,line[:,0],2]=0.
+      
+      rgbTmp[line[:,1]-bandRadius,line[:,0],0]=1.
+      rgbTmp[line[:,1]-bandRadius,line[:,0],1]=1.
+      rgbTmp[line[:,1]-bandRadius,line[:,0],2]=0.
+      
+      rgbTmp[line[:,1]-bandRadius+1,line[:,0],0]=1.
+      rgbTmp[line[:,1]-bandRadius+1,line[:,0],1]=1.
+      rgbTmp[line[:,1]-bandRadius+1,line[:,0],2]=0.
+      
+      rgbTmp[line[:,1]-bandRadius-1,line[:,0],0]=1.
+      rgbTmp[line[:,1]-bandRadius-1,line[:,0],1]=1.
+      rgbTmp[line[:,1]-bandRadius-1,line[:,0],2]=0.
+      
+      show_images([rgbTmp],1,1)
+      
     lbim, numL= ndimage.label(temp)
     hist = np.histogram(lbim,bins=np.arange(numL+10))
     for x in range(0,len(ypos)):
@@ -485,6 +553,7 @@ def segmentLines_new(inputImage,centerLine,debug=False):
       wimg[wimg>0.1]=1
       wimg[wimg<=0.1]=0
       rpe=1-wimg;
+      
       if(debug):
           show_image(rpe)
       removeAbouve(rpe,backX,backY,0,20)
@@ -496,7 +565,7 @@ def segmentLines_new(inputImage,centerLine,debug=False):
       removeSmallRegs(rpe,3)
       if(debug):
           show_image(rpe)
-    
+      
       rpe=dilation(rpe,cross)
       rpe=dilation(rpe,cross)
       cleaned=rpe
@@ -572,4 +641,28 @@ def segmentLines_new(inputImage,centerLine,debug=False):
       CRX=fY+fY2
       MID=0.5*CRX
       CENTER=np.array([fX,MID]).T
-      return CENTER
+      
+      if(debug):
+           tmp=np.copy(cleaned)
+           tmp=tmp.astype(float)
+           tmp=tmp/np.max(tmp)
+           cl=CENTER.astype(int)
+           rgbTmp=np.empty((cleaned.shape[0],cleaned.shape[1],3))
+           rgbTmp[:,:,0]=tmp
+           rgbTmp[:,:,1]=tmp
+           rgbTmp[:,:,2]=tmp
+           
+           rgbTmp[cl[:,1],cl[:,0],0]=1.
+           rgbTmp[cl[:,1],cl[:,0],1]=0.
+           rgbTmp[cl[:,1],cl[:,0],2]=0.
+           
+           rgbTmp[cl[:,1]+1,cl[:,0],0]=1.
+           rgbTmp[cl[:,1]+1,cl[:,0],1]=0.
+           rgbTmp[cl[:,1]+1,cl[:,0],2]=0.
+           
+           rgbTmp[cl[:,1]-1,cl[:,0],0]=1.
+           rgbTmp[cl[:,1]-1,cl[:,0],1]=0.
+           rgbTmp[cl[:,1]-1,cl[:,0],2]=0.
+           
+           show_images([rgbTmp],1,1)
+      return CENTER,cleaned
