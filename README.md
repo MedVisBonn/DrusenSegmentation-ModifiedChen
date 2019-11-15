@@ -10,7 +10,7 @@ The scripts require
 
 * Python 3.7: https://www.python.org/downloads/
 
-* Other python packages such as numpy, scipy, skimage, argparse, os, sys, and matplotlib should be pre-installed 
+* Other python packages such as opencv, cffi, numpy, scipy, skimage, and matplotlib should be pre-installed 
 
 to run.
 
@@ -33,7 +33,7 @@ In order to use multi-scale anisotropic fourth-order diffusion (MAFOD) filter pr
 
 Before running the algorithms on other OCT volumes, edit ```OCT_info.txt``` respectively.
 
-Liscence
+License
 ----------
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 This program is distributed in the hope that it will be useful, but without any warranty. See the GNU General Public License under http://www.gnu.org/licenses/ for more details.
@@ -50,9 +50,7 @@ References
 
 Cite
 ----------
-You are welcome to cite the corresponding publication
-
-* Our paper
+The manuscript corresponding to this repository is currently undergoing peer review.
 
   
 Git Authors
