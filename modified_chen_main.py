@@ -161,7 +161,7 @@ def read_b_scans( path , img_type = "None",toID=False,returnIds=False):
          if(ftype==img_type or img_type=="None"):
              ind.append(int(d2[fi].split('-')[0]))
              
-             raw = io.imread(filename)
+             raw = io.imread(filename, plugin='pil')
              if(len(raw.shape)==3):
                  raw=raw.astype('float')
                  raw=(0.2989*raw[:,:,0])+(0.5870*raw[:,:,1])+(0.1140*raw[:,:,2])
@@ -311,7 +311,7 @@ def seg_modified_chen( inputImage, useMAFOD, debug=False ):
                               octParams['lambda'])
   else:
       filter1=FF.FilterBilateral(inputImage)
-      
+  
   threshold=FF.computeHistogrammThreshold(filter1,octParams['sizeInY'])
   RNFL=FF.getTopRNFL(filter1,threshold,False)
 
@@ -339,13 +339,15 @@ def seg_modified_chen( inputImage, useMAFOD, debug=False ):
       
   if( len(RNFL) ==0):
         return [],[]
+  
+  
   mask=FF.thresholdImage(filter1,threshold)
   bandRadius=int(0.04/float(octParams['sizeInY']/float(inputImage.shape[0]))) # Must be 40um
   mask2=FF.removeTopRNFL(filter1,mask,RNFL,bandRadius=bandRadius)
   FF.extractRegionOfInteresst(filter1,mask2,bw=bandRadius);
   centerLine1=FF.getCenterLine(mask2)
-  centerLine2,mask3=FF.segmentLines_new(filter1,centerLine1,debug)
   
+  centerLine2,mask3=FF.segmentLines_new(filter1,centerLine1,debug)
   if(False):
       tmp=np.copy(mask3)
       tmp=tmp.astype(float)
@@ -541,7 +543,6 @@ def seg_chen( inputImage, useMAFOD,debug=False):
                               octParams['lambda'])
     else:
         filter1=FF.FilterBilateral(inputImage)
-    
     threshold=FF.computeHistogrammThreshold(filter1,octParams['sizeInY'])
     RNFL=FF.getTopRNFL(filter1,threshold,False)
     if(debug):
@@ -976,7 +977,7 @@ def read_drusen_from_image(readPath):
     return drusen
 
 def read_enface_from_image(readPath):
-    return io.imread(readPath+os.sep+"enface.png")    
+    return io.imread(readPath+os.sep+"enface.png", plugin='pil')    
     
 #========================================= end of Chen related method functions                   
     
@@ -1015,7 +1016,7 @@ def permute(A, dim):
     return np.transpose( A , dim )
     
 def imread(filename):
-    return io.imread(filename)
+    return io.imread(filename, plugin='pil')
     
 def convert_label_uint_to_id(label):
     return label/85 if len(np.unique(label))==4 else label/127

@@ -51,11 +51,13 @@ def removeSmallRegs(img,regSize):
 def  FilterBilateral(img, stdFilter=False,winh=5, winw=15,S0=20,S1=50):
     
     if stdFilter==False:
+      
       winsize=(winh,winw)
       win=np.ones(winsize)
-      win=255*win
+#      win=255*win
       img255=np.copy(img)
-      img=img/255.
+      img=img.astype('uint8')
+#      img=img/255.
       result=mean_bilateral(img, win, shift_x=False,shift_y=False,s0=S0,s1=S1)
       img=img255
       return result;
@@ -522,6 +524,7 @@ def extractRegionOfInteresst(img,mask,bw):
 
 
 def segmentLines_new(inputImage,centerLine,debug=False):
+      
       img=inputImage
       backupImg=np.copy(img)
       center=np.array(centerLine)
@@ -571,6 +574,7 @@ def segmentLines_new(inputImage,centerLine,debug=False):
       cleaned=rpe
       if(np.sum(cleaned.astype(int))==0):
           return centerLine
+      
           
       upX,upY=getUpperLine(cleaned,debug)
       upXq=np.copy(upX)
@@ -580,26 +584,28 @@ def segmentLines_new(inputImage,centerLine,debug=False):
 ### FIRST IMPROVEMENT
 
       selem=np.ones([10,1],dtype=np.uint8)
+      img_eq=(img_eq*255).astype('uint8')
       img_eq2 = rank.equalize(img_eq, selem=selem)
       img_eq2=img_eq2/255.0
       wimg2=1-img_eq2
       wimg2[scaledImg<0.2]=1
       wimg2[wimg2<=0.2]=0
       wimg2[wimg2>=0.8]=1
-
+      
       rimg=np.copy(wimg2)
       rimg[:,:]=0
       rimg[wimg2==0]=1
       removeAbouve(rimg,upX,upY,0.0,0)
       removeBelow(rimg,doX,doY,0.0,0)
-
+      
+      
       rimg=dilation(rimg,cross)
       rimg=binClose(rimg,cross)
       upX,upY=getUpperLine(rimg)
       doX,doY=getLowerLine(rimg)
 
       showIm=np.copy(rimg).astype(np.float64)
-
+      
 ### GAUSSIAN IMPROVEMENT FOR LOWER LINE
       selem=np.ones([10,1],dtype=np.uint8)
       gausImg=gaussian_filter(img,sigma=2,order=0)
@@ -613,7 +619,7 @@ def segmentLines_new(inputImage,centerLine,debug=False):
       removeAbouve(qimg,upX,upY,0.0,0)
       removeBelow(qimg,doX,doY,0.0,0)
       qimg=dilation(qimg,cross)
-
+      
       rimg=improveDown(qimg,0)
       restoreBigLabels(rimg,qimg,200)
       upX,upY=getUpperLine(rimg)
@@ -621,7 +627,7 @@ def segmentLines_new(inputImage,centerLine,debug=False):
 
       restoreBigLabels(rimg,qimg,200)
       doX,doY=getLowerLine(rimg)
-
+      
 ############### IMPROVE TOP LINE
       selem=np.ones([10,1],dtype=np.uint8)
       gausImg=gaussian_filter(img,sigma=2,order=0)
@@ -665,4 +671,5 @@ def segmentLines_new(inputImage,centerLine,debug=False):
            rgbTmp[cl[:,1]-1,cl[:,0],2]=0.
            
            show_images([rgbTmp],1,1)
+      
       return CENTER,cleaned
