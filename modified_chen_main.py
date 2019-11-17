@@ -161,7 +161,7 @@ def read_b_scans( path , img_type = "None",toID=False,returnIds=False):
          if(ftype==img_type or img_type=="None"):
              ind.append(int(d2[fi].split('-')[0]))
              
-             raw = io.imread(filename, plugin='pil')
+             raw = io.imread(filename)
              if(len(raw.shape)==3):
                  raw=raw.astype('float')
                  raw=(0.2989*raw[:,:,0])+(0.5870*raw[:,:,1])+(0.1140*raw[:,:,2])
@@ -472,10 +472,16 @@ def get_label_from_projection_image_chen(projected_labels, labels):
         l_area = lbls[:,:,i] 
         lbls[:,:,i] = l_area * valid_drusens
     return lbls
-    
+
+def save_b_scans(bscans,savePath):
+	create_directory(savePath)
+	for i in range(bscans.shape[2]):
+		io.imsave(savePath+str(i+39)+"-Input.tif",bscans[:,:,i].astype("uint8"))
+	exit()	   
 def segment_drusen_using_chen_modified_chen_method(path,savePath, method,layerPath="",drusenPath="",enfacePath=""):
     print("Eliminating false positives...")
     bs = read_b_scans( path, "Input.tif")
+    
     postProcessedMasks=run_chen_modified_chen_method(bs,method=method,\
                         layerPath=layerPath,drusenPath=drusenPath,\
                         enfacePath=enfacePath)
@@ -913,6 +919,7 @@ def run_chen_modified_chen_method(b_scans,method,savePath="",layerPath="",\
 
 def save_rpe_nrpe_drusen(layerPath,druPath,enfacePath,refPath,method,useMAFOD):
     bScans = read_b_scans( refPath, "Input.tif")
+    #save_b_scans(bScans,savePath="C:\\Users\\shekoufeh\\Desktop\\Manuscript\\ChenGit\\DrusenSegmentation-ModifiedChen\\volume2\\")
     initialize_rpe_nrpe_lists(bScans,method,useMAFOD)
     hmask = np.zeros((bScans.shape[2], bScans.shape[1]))
     rpeNrpe=np.empty(bScans.shape)
@@ -977,7 +984,7 @@ def read_drusen_from_image(readPath):
     return drusen
 
 def read_enface_from_image(readPath):
-    return io.imread(readPath+os.sep+"enface.png", plugin='pil')    
+    return io.imread(readPath+os.sep+"enface.png")    
     
 #========================================= end of Chen related method functions                   
     
@@ -1016,7 +1023,7 @@ def permute(A, dim):
     return np.transpose( A , dim )
     
 def imread(filename):
-    return io.imread(filename, plugin='pil')
+    return io.imread(filename)
     
 def convert_label_uint_to_id(label):
     return label/85 if len(np.unique(label))==4 else label/127
