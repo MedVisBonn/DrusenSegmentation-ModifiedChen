@@ -33,6 +33,11 @@ In order to use multi-scale anisotropic fourth-order diffusion (MAFOD) filter pr
 
 Before running the algorithms on other OCT volumes, edit ```OCT_info.txt``` respectively.
 
+Dataset
+------------------
+
+The exemplary OCT volume scan in the ``sample-scan/volume1`` folder consists of 145 B-scans. You can download the complete version of this dataset that provides ground truth for RPE and BM layers per B-scan from this link https://github.com/MedVisBonn/OCT-Annotation-Tool/tree/master/data . The RPE+BM layer segmentation is carefully performed by a medical expert, who manually has corrected an initial segmentation, spending about 10 minutes per B-scan on average, adding up to a total of 26 hours. Also, ``sample-scan/volume1/OCT-Info.xml`` file includes additional information about the OCT volume scan such as B-scan quality (marked by ``<ImageQuality>`` tag), and size of each B-scan pixel in micrometer (marked by ``<ScaleX>``, ``<ScaleY>`` tags).
+
 License
 ----------
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
