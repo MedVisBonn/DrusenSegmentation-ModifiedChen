@@ -55,7 +55,7 @@ References
 
 Cite
 ----------
-Wintergerst, M.W.M., Gorgi Zadeh, S., Wiens, V. et al. Replication and Refinement of an Algorithm for Automated Drusen Segmentation on Optical Coherence Tomography. *Sci Rep* 10, 7395 (2020). 
+Wintergerst, M.W.M., Gorgi Zadeh, S. et al. Replication and Refinement of an Algorithm for Automated Drusen Segmentation on Optical Coherence Tomography. *Sci Rep* 10, 7395 (2020). 
 https://doi.org/10.1038/s41598-020-63924-6
 
   
