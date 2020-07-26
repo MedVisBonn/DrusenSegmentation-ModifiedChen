@@ -37,7 +37,7 @@ To evaluate segmentation quality using overlapping ration (OR), absolute drusen 
 ```
 python drusen_segmentation_evaluation.py --gtPath <path to ground truth folder> --prPath <path to automatically generated segmentation> --savePath <path to a destination folder> --scope <scope of interest> --resx <floating number> --resy <floating number> --resz <floating number>
 ```
-Both ground truth and automatically generated segmentation folders must contain binary drusen segmentation images with ```XXX-binmask.png``` name format, where XXX is the B-scan number. Set  ```--scope``` to either ```{vol, maxDru, druPresent}``` to perform the OR and ADAD computation volumetrically, for B-scan with largest drusen load, or all B-scans with drusen respectively. Using optional variables ```--resx```, ```--resy``` you can set B-scan pixel size in micrometer and with ```--resz``` the distance between consecutive B-scans. These numbers are to compute ADAD and overall drusen volume in micrometer.
+Both ground truth and automatically generated segmentation folders must contain binary drusen segmentation images with ```XXX-binmask.png``` name format, where XXX is the B-scan number. Set  ```--scope``` to either ```{vol, maxDru, druPresent}``` to perform the OR and ADAD computation volumetrically, for B-scan with largest drusen load, or all B-scans with drusen, respectively. Using optional variables ```--resx```, ```--resy``` you can set B-scan pixel size in micrometer and with ```--resz``` the distance between consecutive B-scans. These numbers are used to compute ADAD and overall drusen volume in micrometer.
 
 
 Dataset
